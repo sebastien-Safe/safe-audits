@@ -1,0 +1,67 @@
+/* =========================================================
+   S@FE — Design tokens partagés (clair / sombre)
+   =========================================================
+   Source unique des variables de couleur pour toutes les apps
+   (crm-core, safe-rgpd, safe-media, safe-vente, safe-paiement).
+
+   Thème sombre = valeurs historiques de assets/css/base.css,
+   inchangées (comportement par défaut préservé). Thème clair =
+   nouvelle variante épurée, activée via [data-theme="light"] sur
+   <html> (voir core/design-system/theme-toggle.js).
+
+   À charger avant tout autre CSS de l'app (base.css, style.css,
+   shared.css, *-clients.css...).
+   ========================================================= */
+
+:root,
+:root[data-theme="dark"] {
+  --navy:       #0a1628;
+  --navy-mid:   #142240;
+  --panel:      #142240;
+  --line:       rgba(255,255,255,.08);
+  --txt:        #ffffff;
+  --mut:        #94a3b8;
+  --mut-2:      #cbd5e1;
+  --accent:     #3b82f6;
+  --accent-2:   #2563eb;
+  --gold:       #f59e0b;
+  --gold-light: #fbbf24;
+  --alert:      #ff4d5e;
+  --ok:         #22c55e;
+  --r:          14px;
+  --ff-disp:    'Sora', sans-serif;
+  --ff-body:    'IBM Plex Sans', sans-serif;
+  --ff-mono:    'IBM Plex Mono', monospace;
+
+  --field-bg:   rgba(255,255,255,.03);
+  --surface-2:  rgba(255,255,255,.03);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --navy:       #f8fafc;
+  --navy-mid:   #ffffff;
+  --panel:      #ffffff;
+  --line:       rgba(15,23,42,.10);
+  --txt:        #0f172a;
+  --mut:        #64748b;
+  --mut-2:      #334155;
+  --accent:     #2563eb;
+  --accent-2:   #1d4ed8;
+  --gold:       #d97706;
+  --gold-light: #f59e0b;
+  --alert:      #dc2626;
+  --ok:         #16a34a;
+  --r:          14px;
+  --ff-disp:    'Sora', sans-serif;
+  --ff-body:    'IBM Plex Sans', sans-serif;
+  --ff-mono:    'IBM Plex Mono', monospace;
+
+  --field-bg:   rgba(15,23,42,.03);
+  --surface-2:  rgba(15,23,42,.03);
+  color-scheme: light;
+}
+
+/* Les composants qui utilisaient jusqu'ici "#fff" en dur pour le texte
+   doivent migrer vers var(--txt) au fil de l'eau pour bénéficier du
+   thème clair — non fait de manière exhaustive dans cette passe. */
