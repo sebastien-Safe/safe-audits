@@ -1,0 +1,12 @@
+.git
+.github
+.wrangler
+.DS_Store
+.claude
+node_modules
+supabase
+*.md
+wrangler.jsonc
+package.json
+package-lock.json
+.gitignore
