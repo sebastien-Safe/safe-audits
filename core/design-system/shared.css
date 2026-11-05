@@ -4,7 +4,7 @@
    Surcharger les 4 variables --accent-* pour l'identité du module
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+/* Polices système : aucune requête vers un service de polices tiers (pas de transfert d'adresse IP à Google avant consentement). */
 
 /* ── TOKENS ────────────────────────────────────────────────── */
 :root {
@@ -16,9 +16,9 @@
   --warn:#f59e0b;    --warn-bg:rgba(245,158,11,.1);  --warn-bd:rgba(245,158,11,.3);
   --alert:#ff4d5e;   --alert-bg:rgba(255,77,94,.1);  --alert-bd:rgba(255,77,94,.3);
   --r:12px;  --r-sm:8px;
-  --ff-disp:'Sora',sans-serif;
-  --ff-body:'IBM Plex Sans',sans-serif;
-  --ff-mono:'IBM Plex Mono',monospace;
+  --ff-disp:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --ff-body:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --ff-mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
 
   /* Accent module — override dans chaque module CSS */
   --accent-mod:#3b82f6;

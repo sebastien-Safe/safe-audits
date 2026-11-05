@@ -179,7 +179,8 @@ body{margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-seri
   <p style="margin:0;font-size:11px;color:#1e40af;line-height:1.5">
     &#10003; Consentement RGPD recueilli le ${esc(p.date)}. ${esc(p.nom)} (${esc(p.email)}) autorise S@FE
     à conserver ses coordonnées pour le suivi de ce diagnostic.
-    Données non transmises à des tiers — Art. 13 RGPD.
+    Données traitées par S@FE et ses sous-traitants techniques, jamais revendues —
+    <a href="https://www.safe-digitalisation.fr/informations-legales.html#confidentialite" style="color:#1e40af">politique de confidentialité</a>.
   </p>
 </td></tr>
 </table>

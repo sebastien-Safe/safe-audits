@@ -148,6 +148,7 @@ h1,h2,h3{font-family:var(--ff-disp);color:#fff;line-height:1.2;letter-spacing:-.
   <div class="findings" id="findings"></div>
   <button class="btn-pdf" onclick="openModal()">📄 Générer le rapport PDF</button>
   <button class="btn-rst" onclick="restart()">↺ Nouveau diagnostic</button>
+  <p style="margin-top:18px;text-align:center;font-size:.72rem;color:var(--mut)"><a href="https://www.safe-digitalisation.fr/informations-legales.html#mentions" target="_blank" rel="noopener" style="color:inherit">Mentions légales</a> · <a href="https://www.safe-digitalisation.fr/informations-legales.html#confidentialite" target="_blank" rel="noopener" style="color:inherit">Politique de confidentialité</a></p>
 </div>
 
 <!-- Modal PDF -->
@@ -227,8 +228,8 @@ function applyConfig(){
   document.getElementById('chip').textContent = `${CFG.chipIcon} ${CFG.chipLabel}`;
   document.getElementById('score-s').textContent = CFG.scoreLabel;
   document.getElementById('modal-title').textContent = `📄 Rapport ${CFG.title}`;
-  document.getElementById('consent-text').textContent =
-    `J'autorise S@FE à conserver mes coordonnées dans le cadre du suivi ${CFG.consentSuffix}. Données non transmises à des tiers (Art. 13 RGPD).`;
+  document.getElementById('consent-text').innerHTML =
+    `J'autorise S@FE à conserver mes coordonnées dans le cadre du suivi ${CFG.consentSuffix}. Elles sont traitées par S@FE et ses sous-traitants techniques (Cloudflare, Brevo), jamais revendues. <a href="https://www.safe-digitalisation.fr/informations-legales.html#confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a>.`;
 }
 
 function init(){
@@ -400,7 +401,7 @@ th{background:${CFG.color};color:#fff;padding:8px 10px;text-align:left;font-size
   <ul>${recoHtml}</ul>
 </div>
 <div class="consent-box">
-  ✓ Consentement RGPD recueilli le ${now}. ${nom} (${email}) autorise S@FE à conserver ses coordonnées pour le suivi de ce diagnostic. Données non transmises à des tiers conformément à l'Art. 13 RGPD.
+  ✓ Consentement RGPD recueilli le ${now}. ${nom} (${email}) autorise S@FE à conserver ses coordonnées pour le suivi de ce diagnostic. Données traitées par S@FE et ses sous-traitants techniques, jamais revendues (politique de confidentialité : www.safe-digitalisation.fr/informations-legales).
 </div>
 <div class="footer">
   <span>S@FE — Safe Digitalisation · contact@safe-digitalisation.fr</span>
