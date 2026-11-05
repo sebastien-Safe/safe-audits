@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss://*.supabase.co blob:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: blob:;">
   <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -89,9 +89,6 @@ h1,h2,h3{font-family:var(--ff-disp);color:#fff;line-height:1.2;letter-spacing:-.
 .btn-rst:hover{border-color:var(--m);color:var(--m)}
 /* Passerelle vers l'espace client : ambre S@FE, volontairement plus visible que
    le bouton PDF — c'est l'action que l'on veut voir cliquee. Zone tactile 48px. */
-.btn-espace{display:block;width:100%;min-height:48px;padding:14px;border-radius:13px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a1628;font-family:var(--ff-disp);font-weight:800;font-size:.95rem;text-align:center;text-decoration:none;box-shadow:0 4px 16px rgba(245,158,11,.32);transition:.15s}
-.btn-espace:hover,.btn-espace:focus-visible{transform:translateY(-1px);box-shadow:0 8px 24px rgba(245,158,11,.45)}
-.espace-note{margin:8px 0 16px;font-size:.76rem;line-height:1.5;color:var(--mut);text-align:center}
 
 /* MODAL */
 .modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:none;align-items:flex-end;justify-content:center}
@@ -148,12 +145,6 @@ h1,h2,h3{font-family:var(--ff-disp);color:#fff;line-height:1.2;letter-spacing:-.
   </div>
   <div class="risk-chip" id="risk-chip"></div>
   <div class="findings" id="findings"></div>
-  <!-- Passage du diagnostic declaratif (7 questions) a l'audit complet de
-       l'espace client. Le lien est enrichi des coordonnees des que le visiteur
-       a rempli le formulaire du rapport (voir majLienEspace()). -->
-  <a class="btn-espace" id="btn-espace" href="https://client.safe-digitalisation.fr/inscription.html?origine=diagnostic"
-     data-gtag="espace_client_depuis_diagnostic">Pousser mon audit plus loin →</a>
-  <p class="espace-note">Audit complet cybersécurité, RGPD et visibilité, suivi de vos actions, rapport détaillé. Gratuit, sans engagement.</p>
   <button class="btn-pdf" onclick="openModal()">📄 Générer le rapport PDF</button>
   <button class="btn-rst" onclick="restart()">↺ Nouveau diagnostic</button>
 </div>
@@ -180,45 +171,19 @@ h1,h2,h3{font-family:var(--ff-disp);color:#fff;line-height:1.2;letter-spacing:-.
 
 <script src="./mission-data.js"></script>
 <script>
-const _SB_URL = 'https://bgkijldrmdhklkadkeua.supabase.co';
-
-// Enrichit le lien « Pousser mon audit plus loin » avec ce que le visiteur a
-// deja saisi, pour qu'il n'ait pas a le ressaisir a l'inscription. Seuls le nom,
-// l'e-mail et l'entreprise sont transmis : pas les reponses, qui restent dans le
-// rapport et dans la fiche CRM.
-function majLienEspace({ email, nom, ent } = {}) {
-  const a = document.getElementById('btn-espace');
-  if (!a) return;
-  const q = new URLSearchParams({ origine: 'diagnostic_' + CFG.id });
-  if (email) q.set('email', email);
-  if (nom) q.set('nom', nom);
-  if (ent && ent !== '—') q.set('entreprise', ent);
-  a.href = 'https://client.safe-digitalisation.fr/inscription.html?' + q.toString();
-}
-
+// Envoi du rapport au visiteur + notification à l'équipe S@FE : Worker Cloudflare
+// de ce même site (worker.js), sans Supabase.
 async function sendAuditEmail(to_email, to_name, params) {
   try {
-    const r = await fetch(`${_SB_URL}/functions/v1/send-audit-email`, {
+    const r = await fetch('/api/send-audit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to_email, to_name, params }),
     });
     if (r.ok) showToast('Rapport envoyé par email ✓', 'ok');
+    else if (r.status === 429) showToast('PDF généré — trop de demandes, réessayez plus tard', 'warn');
     else showToast('PDF généré — email non envoyé', 'warn');
   } catch { showToast('PDF généré — email non envoyé', 'warn'); }
-}
-
-// Crée la fiche CRM correspondante (contact + tâche de qualification + entrée
-// du journal RGPD) — non bloquant : un échec ici ne doit jamais empêcher le
-// prospect de recevoir son rapport (déjà géré par sendAuditEmail ci-dessus).
-async function createAuditLead(payload) {
-  try {
-    await fetch(`${_SB_URL}/functions/v1/create-lead`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ site: 'digitalisation', form_type: `audit_${CFG.id}`, ...payload }),
-    });
-  } catch { /* non bloquant */ }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -431,8 +396,6 @@ th{background:${CFG.color};color:#fff;padding:8px 10px;text-align:left;font-size
 </div>
 </body></html>`;
 
-  majLienEspace({ email, nom, ent });
-
   const w = window.open('', '_blank');
   w.document.write(html);
   w.document.close();
@@ -449,13 +412,6 @@ th{background:${CFG.color};color:#fff;padding:8px 10px;text-align:left;font-size
     niveau_bg: niveauBg, niveau_border: niveauBorder,
     rows: rowsData, recommandations: reco, date: now,
     conseiller: 'Safe Digitalisation',
-    rdv_url: (() => { const g = localStorage.getItem('pt_google_booking_url'); const p = localStorage.getItem('pt_prenom') || ''; return g ? `https://crm.safe-digitalisation.fr/booking.html?gcal=${encodeURIComponent(g)}&nom=${encodeURIComponent(p)}` : 'https://crm.safe-digitalisation.fr/booking.html'; })(),
-  });
-
-  createAuditLead({
-    nom, email, telephone: tel || undefined, entreprise: ent || undefined,
-    score: pct, niveau: lvl.label, rows: rowsData, recommandations: reco,
-    rgpd: true,
   });
 }
 
