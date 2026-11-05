@@ -10,33 +10,37 @@ usages de l'IA, cybersécurité, réseaux sociaux.
 ```
 safe-audits/
 ├── index.html              ← Hub des 6 audits
+├── worker.js               ← Worker Cloudflare : POST /api/send-audit
+├── wrangler.jsonc
 ├── core/
-│   ├── audit/              ← Formulaires + moteur de scoring
+│   ├── audit/              ← Formulaires + moteur de scoring (côté navigateur)
 │   │   ├── mission.html    ← Page de diagnostic (paramètre ?m=)
 │   │   ├── mission-data.js ← Questions et scoring par domaine
 │   │   └── referentiels/   ← Référentiels scoring (cyber, rgpd, seo)
 │   └── design-system/      ← Tokens CSS, thème, composants partagés
-├── supabase/
-│   ├── functions/          ← Edge functions (soumission, email, vérification)
-│   └── migrations/         ← Schéma audit (quota email)
 ├── robots.txt
-├── sitemap.xml
-└── CNAME
+└── sitemap.xml
 ```
+
+## Fonctionnement
+
+Le questionnaire, le score et le PDF sont calculés dans le navigateur.
+À l'envoi, `mission.html` appelle `POST /api/send-audit` (Worker de ce même
+site) qui :
+
+1. vérifie le jeton Turnstile et applique les limites de débit (par IP et par
+   destinataire) ;
+2. envoie le rapport au visiteur par Brevo ;
+3. envoie une notification à contact@safe-digitalisation.fr (reply-to = visiteur).
+
+Aucune donnée n'est stockée : plus de Supabase, plus de CRM.
 
 ## Déploiement
 
-GitHub Pages depuis la branche `main` → `audits.safe-digitalisation.fr`
+Cloudflare Workers, domaine personnalisé `audits.safe-digitalisation.fr`.
 
-## Edge Functions
-
-| Fonction | Rôle |
-|---|---|
-| `client-audit-submit` | Soumission d'un audit (scoring + PDF + email) |
-| `send-audit-email` | Envoi du rapport par email |
-| `request-audit-verification` | Vérification email avant audit |
-| `verify-audit-email` | Validation du code email |
-| `create-lead` | Création de prospect depuis le formulaire |
-
-Ces fonctions restent déployées sur le projet Supabase `Safe-crm-V2`
-tant que l'éclatement Supabase n'est pas fait (Phase 4).
+```bash
+npx wrangler secret put BREVO              # clé API Brevo
+npx wrangler secret put TURNSTILE_SECRET   # clé secrète du widget Turnstile
+npx wrangler deploy
+```
