@@ -116,6 +116,7 @@ h1,h2,h3{font-family:var(--ff-disp);color:#fff;line-height:1.2;letter-spacing:-.
 .toast.err{background:rgba(255,77,94,.15);border:1px solid rgba(255,77,94,.4);color:#fca5a5}
 .toast.info{background:rgba(var(--m-rgb),.15);border:1px solid rgba(var(--m-rgb),.4);color:#c4b5fd}
 </style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body style="display:flex;flex-direction:column;min-height:100vh">
 
@@ -162,6 +163,7 @@ h1,h2,h3{font-family:var(--ff-disp);color:#fff;line-height:1.2;letter-spacing:-.
       <input type="checkbox" id="f-rgpd">
       <span id="consent-text">J'autorise S@FE à conserver mes coordonnées dans le cadre du suivi de ce diagnostic. Données non transmises à des tiers (Art. 13 RGPD).</span>
     </label>
+    <div class="cf-turnstile" id="cf-turnstile-audit" data-sitekey="0x4AAAAAAE0whlsk7nDHoVec" data-action="audit" data-callback="onTurnstileAudit" data-error-callback="onTurnstileAuditExpired" data-expired-callback="onTurnstileAuditExpired" style="margin:12px 0"></div>
     <button class="btn-gen" id="btn-gen" onclick="genPDF()">📥 Télécharger le rapport PDF</button>
     <button class="btn-cancel" onclick="closeModal()">Annuler</button>
   </div>
@@ -173,17 +175,26 @@ h1,h2,h3{font-family:var(--ff-disp);color:#fff;line-height:1.2;letter-spacing:-.
 <script>
 // Envoi du rapport au visiteur + notification à l'équipe S@FE : Worker Cloudflare
 // de ce même site (worker.js), sans Supabase.
+// Anti-robot Turnstile : le jeton est à usage unique, on le redemande après chaque envoi.
+let _tsToken = '';
+window.onTurnstileAudit = function (t) { _tsToken = t; };
+window.onTurnstileAuditExpired = function () { _tsToken = ''; };
+
 async function sendAuditEmail(to_email, to_name, params) {
+  const turnstile_token = _tsToken;
+  _tsToken = '';
   try {
     const r = await fetch('/api/send-audit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to_email, to_name, params }),
+      body: JSON.stringify({ to_email, to_name, params, turnstile_token }),
     });
     if (r.ok) showToast('Rapport envoyé par email ✓', 'ok');
+    else if (r.status === 403) showToast('PDF généré — vérification anti-robot refusée, réessayez', 'warn');
     else if (r.status === 429) showToast('PDF généré — trop de demandes, réessayez plus tard', 'warn');
     else showToast('PDF généré — email non envoyé', 'warn');
   } catch { showToast('PDF généré — email non envoyé', 'warn'); }
+  finally { try { window.turnstile && window.turnstile.reset('#cf-turnstile-audit'); } catch (e) {} }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -315,6 +326,7 @@ function genPDF(){
   const rgpd = document.getElementById('f-rgpd').checked;
   if (!nom || !email) { showToast('Nom et e-mail obligatoires', 'err'); return; }
   if (!rgpd) { showToast('Consentement RGPD requis', 'err'); return; }
+  if (!_tsToken) { showToast('Vérification anti-robot en cours — patientez quelques secondes puis réessayez', 'err'); return; }
 
   const total = Object.values(ans).reduce((s, a) => s + W[a.r], 0);
   const pct = Math.round(total / MAX * 100);

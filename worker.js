@@ -8,7 +8,8 @@
    Aucune donnée n'est stockée : le seul enregistrement est l'e-mail reçu.
 
    Secrets / variables (wrangler) :
-     BREVO           secret   clé API Brevo (wrangler secret put BREVO)
+     BREVO              secret   clé API Brevo (wrangler secret put BREVO)
+     TURNSTILE_SECRET   secret   clé secrète du widget Turnstile (anti-robot)
      NOTIFY_EMAIL    var      destinataire de la notification (défaut ci-dessous)
    Bindings facultatifs (anti-abus) : RL_IP, RL_EMAIL (Rate Limiting).
    ========================================================================== */
@@ -225,13 +226,25 @@ async function limited(binding, key) {
   return !success;
 }
 
+async function turnstileOk(token, secret, ip) {
+  if (!secret || typeof token !== "string" || !token) return false;
+  const form = new FormData();
+  form.append("secret", secret);
+  form.append("response", token);
+  if (ip && ip !== "unknown") form.append("remoteip", ip);
+  try {
+    const r = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form });
+    return (await r.json()).success === true;
+  } catch { return false; }
+}
+
 async function sendAudit(request, env) {
   if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   const origin = request.headers.get("Origin");
   if (origin && !ALLOWED_ORIGINS.has(origin) && !/^http:\/\/localhost(:\d+)?$/.test(origin)) {
     return json({ error: "forbidden" }, 403);
   }
-  if (!env.BREVO) return json({ error: "service_unavailable" }, 500);
+  if (!env.BREVO || !env.TURNSTILE_SECRET) return json({ error: "service_unavailable" }, 500);
 
   const raw = await request.text();
   if (raw.length > MAX_BODY) return json({ error: "payload_too_large" }, 413);
@@ -245,6 +258,8 @@ async function sendAudit(request, env) {
 
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
   if (await limited(env.RL_IP, ip) || await limited(env.RL_EMAIL, email)) return json({ error: "rate_limit" }, 429);
+
+  if (!(await turnstileOk(body.turnstile_token, env.TURNSTILE_SECRET, ip))) return json({ error: "captcha_invalide" }, 403);
 
   const params = {
     ...p,
